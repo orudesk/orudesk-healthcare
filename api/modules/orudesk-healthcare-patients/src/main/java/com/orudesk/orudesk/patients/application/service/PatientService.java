@@ -6,6 +6,7 @@ import com.orudesk.orudesk.party.application.port.in.RegisterPersonCommand;
 import com.orudesk.orudesk.party.application.port.in.RegisterPersonUseCase;
 import com.orudesk.orudesk.patients.application.port.in.GetPatientQuery;
 import com.orudesk.orudesk.patients.application.port.in.PatientDetails;
+import com.orudesk.orudesk.patients.application.port.in.NewPatientRegistered;
 import com.orudesk.orudesk.patients.application.port.in.PatientRegistered;
 import com.orudesk.orudesk.patients.application.port.in.RegisterPatientCommand;
 import com.orudesk.orudesk.patients.application.port.in.RegisterPatientUseCase;
@@ -19,6 +20,7 @@ import com.orudesk.orudesk.patients.domain.NotAllowedAtUnitException;
 import com.orudesk.orudesk.patients.domain.Patient;
 import com.orudesk.orudesk.patients.domain.PatientId;
 import com.orudesk.orudesk.patients.domain.PatientNotFoundException;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,10 +39,11 @@ class PatientService implements RegisterPatientUseCase, GetPatientQuery {
     private final LoadPatientPort loadPatientPort;
     private final UnitAccess unitAccess;
     private final Clock clock;
+    private final ApplicationEventPublisher events;
 
     PatientService(RegisterPersonUseCase registerPerson, GetPersonQuery getPerson, NextMrnPort nextMrnPort,
                    SavePatientPort savePatientPort, LoadPatientPort loadPatientPort, UnitAccess unitAccess,
-                   Clock clock) {
+                   Clock clock, ApplicationEventPublisher events) {
         this.registerPerson = registerPerson;
         this.getPerson = getPerson;
         this.nextMrnPort = nextMrnPort;
@@ -48,6 +51,7 @@ class PatientService implements RegisterPatientUseCase, GetPatientQuery {
         this.loadPatientPort = loadPatientPort;
         this.unitAccess = unitAccess;
         this.clock = clock;
+        this.events = events;
     }
 
     @Override
@@ -69,6 +73,8 @@ class PatientService implements RegisterPatientUseCase, GetPatientQuery {
         Mrn mrn = Mrn.fromNumber(nextMrnPort.next());
         Patient patient = Patient.register(personId, mrn, unitId, bloodGroup, contact, LocalDate.now(clock));
         savePatientPort.save(patient);
+        events.publishEvent(new NewPatientRegistered(patient.id().value(), mrn.value(),
+                command.firstName() + " " + command.lastName()));
         return new PatientRegistered(patient.id().value(), mrn.value());
     }
 

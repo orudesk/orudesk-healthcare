@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -41,6 +42,7 @@ class PatientController {
     }
 
     @PostMapping
+    @ApiResponse(responseCode = "201", description = "Registered", useReturnTypeSchema = true)
     @Operation(operationId = "registerPatient", summary = "Register a patient at the hospital or clinic in X-Org-Unit",
             parameters = @Parameter(name = CurrentOrgUnit.HEADER, in = ParameterIn.HEADER, required = true,
                     description = "The hospital or clinic", schema = @Schema(type = "string", format = "uuid")))

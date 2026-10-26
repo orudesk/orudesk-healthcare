@@ -39,11 +39,27 @@ Swagger UI: <http://localhost:8080/swagger-ui.html>. Create a clinic (`createOrg
 someone `RECEPTIONIST` there (`assignRole` with its `orgUnitId`), then `registerPatient` with the
 clinic's id in the `X-Org-Unit` header. Each tenant gets gapless MRNs `MR0000001`, `MR0000002`, ...
 
+The web app (Node 22.12+), in a second terminal:
+
+```bash
+cd orudesk-healthcare/web
+corepack enable
+pnpm install         # also links the core's web packages from ../../orudesk/web
+pnpm dev             # http://localhost:5173: the core's screens plus Patients
+```
+
+`web/` is the healthcare edition's app: `src/main.tsx` starts the core's app with one more module,
+`src/healthcareModule.tsx`, which adds Patients: find a patient by the MRN on their card, register one at the
+hospital or clinic picked in the switcher, and a patient's page. Its API client is generated from this
+edition's contract (`pnpm contract:sync` after changing the API).
+
 ## Run the tests
 
 ```bash
 cd api
 ./gradlew test       # needs Docker
+cd ../web
+pnpm check           # format, lint, types, tests
 ```
 
 ## Licence
