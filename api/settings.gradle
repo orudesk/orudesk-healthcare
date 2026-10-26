@@ -3,7 +3,7 @@ pluginManagement {
     // This repository's own conventions. Renamed: the core (included below) has a "build-logic" too, and
     // two included builds may not share a name.
     includeBuild('build-logic') {
-        name = 'hms-build-logic'
+        name = 'healthcare-build-logic'
     }
 }
 
@@ -17,12 +17,12 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = 'orudesk-hms'
+rootProject.name = 'orudesk-healthcare'
 
 // Build against the core in the folder next to this repository (../orudesk), instead of a released
 // version: Gradle swaps every com.orudesk:orudesk-* dependency for that folder's modules. Change the
 // core, and this build sees it at once. Delete this line to use the released core from Maven Central.
 includeBuild '../../orudesk/api'
 
-include 'modules:orudesk-hms-patients'
-include 'apps:orudesk-hms'
+include 'modules:orudesk-healthcare-patients'
+include 'apps:orudesk-healthcare'

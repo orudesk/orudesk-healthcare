@@ -1,7 +1,7 @@
 # The hospital edition with its database and Redis. Run it from the folder that holds this repository AND
 # the core (orudesk/) side by side, because the image is built from both:
-#   docker compose --env-file orudesk-hms/api/.env -f orudesk-hms/docker/compose.yaml up -d --build --wait
-name: orudesk-hms
+#   docker compose --env-file orudesk-healthcare/api/.env -f orudesk-healthcare/docker/compose.yaml up -d --build --wait
+name: orudesk-healthcare
 
 services:
   postgres:
@@ -32,8 +32,8 @@ services:
   app:
     build:
       context: ../..
-      dockerfile: orudesk-hms/api/Dockerfile
-    image: ghcr.io/orudesk/orudesk-hms:${ORUDESK_VERSION:-latest}
+      dockerfile: orudesk-healthcare/api/Dockerfile
+    image: ghcr.io/orudesk/orudesk-healthcare:${ORUDESK_VERSION:-latest}
     environment:
       DB_HOST: postgres
       DB_PORT: 5432

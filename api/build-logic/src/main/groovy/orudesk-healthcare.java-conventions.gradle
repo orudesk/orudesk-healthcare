@@ -3,7 +3,7 @@ plugins {
     id 'java-library'
 }
 
-group = 'com.orudesk.hms'
+group = 'com.orudesk.healthcare'
 
 java {
     toolchain {

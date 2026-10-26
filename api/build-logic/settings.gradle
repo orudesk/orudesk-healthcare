@@ -1,4 +1,4 @@
-rootProject.name = 'hms-build-logic'
+rootProject.name = 'healthcare-build-logic'
 
 dependencyResolutionManagement {
     repositories {

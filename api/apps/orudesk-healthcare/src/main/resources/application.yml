@@ -1,6 +1,6 @@
 spring:
   application:
-    name: orudesk-hms
+    name: orudesk-healthcare
 
   # Java 21+ virtual threads: each request gets a cheap virtual thread instead of one from Tomcat's pool of 200.
   threads:

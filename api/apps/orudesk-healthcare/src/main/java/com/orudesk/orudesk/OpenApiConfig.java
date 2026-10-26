@@ -21,7 +21,7 @@ import org.springframework.context.annotation.Configuration;
 class OpenApiConfig {
 
     static final String BEARER = "bearer";
-    static final String SOURCE = "https://github.com/orudesk/orudesk-hms";
+    static final String SOURCE = "https://github.com/orudesk/orudesk-healthcare";
 
     @Bean
     OpenAPI orudeskOpenApi(ObjectProvider<BuildProperties> build) {

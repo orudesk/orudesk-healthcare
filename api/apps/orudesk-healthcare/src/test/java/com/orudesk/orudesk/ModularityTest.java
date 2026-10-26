@@ -11,6 +11,6 @@ class ModularityTest {
 
     @Test
     void modulesOnlyUseEachOthersPublicApi() {
-        ApplicationModules.of(OrudeskHmsApplication.class).verify();
+        ApplicationModules.of(OrudeskHealthcareApplication.class).verify();
     }
 }

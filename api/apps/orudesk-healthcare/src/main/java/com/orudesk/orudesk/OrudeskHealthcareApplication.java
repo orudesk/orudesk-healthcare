@@ -8,9 +8,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * finds the core's modules (identity, party, shared, in their jars) and this edition's (patients).
  */
 @SpringBootApplication
-public class OrudeskHmsApplication {
+public class OrudeskHealthcareApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(OrudeskHmsApplication.class, args);
+        SpringApplication.run(OrudeskHealthcareApplication.class, args);
     }
 }

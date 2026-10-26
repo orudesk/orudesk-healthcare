@@ -1,13 +1,13 @@
 // The runnable hospital edition: the core's modules plus the hospital modules, one app.
 plugins {
-    id 'orudesk-hms.spring-boot-app'
+    id 'orudesk-healthcare.spring-boot-app'
 }
 
 dependencies {
     implementation 'com.orudesk:orudesk-platform-core'
     implementation 'com.orudesk:orudesk-identity'
     implementation 'com.orudesk:orudesk-party'
-    implementation project(':modules:orudesk-hms-patients')
+    implementation project(':modules:orudesk-healthcare-patients')
 
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.flywaydb:flyway-database-postgresql'

@@ -1,6 +1,6 @@
 // Patients: who the hospital treats, each with a medical record number (MRN). Owns the hc_ tables.
 plugins {
-    id 'orudesk-hms.java-conventions'
+    id 'orudesk-healthcare.java-conventions'
 }
 
 dependencies {

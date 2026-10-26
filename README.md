@@ -1,4 +1,4 @@
-# Orudesk Hospital
+# Orudesk Healthcare
 
 **The Orudesk edition for hospitals and clinics**: everything in the [Orudesk core](https://github.com/orudesk/orudesk)
 (login, roles per unit, organisation units, the people registry) plus what a hospital needs, starting with
@@ -13,9 +13,9 @@ You need only **Docker**, and the core checked out next to this repository (the 
 
 ```bash
 git clone https://github.com/orudesk/orudesk.git
-git clone https://github.com/orudesk/orudesk-hms.git
-cp orudesk/api/.env.example orudesk-hms/api/.env       # then set DB_PASSWORD, ORUDESK_JWT_SECRET and the first admin
-docker compose --env-file orudesk-hms/api/.env -f orudesk-hms/docker/compose.yaml up -d --build --wait
+git clone https://github.com/orudesk/orudesk-healthcare.git
+cp orudesk/api/.env.example orudesk-healthcare/api/.env       # then set DB_PASSWORD, ORUDESK_JWT_SECRET and the first admin
+docker compose --env-file orudesk-healthcare/api/.env -f orudesk-healthcare/docker/compose.yaml up -d --build --wait
 ```
 
 Swagger UI: <http://localhost:8081/swagger-ui.html>. Log in, then try `registerPatient`.
@@ -26,12 +26,12 @@ You need **JDK 25** and **Docker**, and the core checked out next to this reposi
 
 ```bash
 git clone https://github.com/orudesk/orudesk.git
-git clone https://github.com/orudesk/orudesk-hms.git
+git clone https://github.com/orudesk/orudesk-healthcare.git
 cd orudesk
 cp api/.env.example api/.env                       # then edit the values
 docker compose --env-file api/.env -f docker/compose.yaml up -d --wait
-cp api/.env ../orudesk-hms/api/.env
-cd ../orudesk-hms/api
+cp api/.env ../orudesk-healthcare/api/.env
+cd ../orudesk-healthcare/api
 ./gradlew bootRun
 ```
 

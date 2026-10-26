@@ -1,18 +1,18 @@
 # The hospital edition's image, built from source. This edition builds against the core checked out next to
 # it (settings.gradle: includeBuild '../../orudesk/api'), so the build context is the folder that holds BOTH
 # repositories:
-#   cd ..   # the folder with orudesk/ and orudesk-hms/ side by side
-#   docker build -f orudesk-hms/api/Dockerfile -t orudesk-hms .
+#   cd ..   # the folder with orudesk/ and orudesk-healthcare/ side by side
+#   docker build -f orudesk-healthcare/api/Dockerfile -t orudesk-healthcare .
 
 # ---- Stage 1: build the jar with the JDK ----
 FROM eclipse-temurin:25-jdk AS build
 WORKDIR /src
 COPY orudesk/api orudesk/api
-COPY orudesk-hms/api orudesk-hms/api
-WORKDIR /src/orudesk-hms/api
+COPY orudesk-healthcare/api orudesk-healthcare/api
+WORKDIR /src/orudesk-healthcare/api
 RUN --mount=type=cache,target=/root/.gradle \
-    ./gradlew --no-daemon :apps:orudesk-hms:bootJar -x test \
- && find apps/orudesk-hms/build/libs -name '*.jar' ! -name '*-plain.jar' -exec cp {} /src/app.jar \; \
+    ./gradlew --no-daemon :apps:orudesk-healthcare:bootJar -x test \
+ && find apps/orudesk-healthcare/build/libs -name '*.jar' ! -name '*-plain.jar' -exec cp {} /src/app.jar \; \
  && java -Djarmode=tools -jar /src/app.jar extract --layers --launcher --destination /src/extracted
 
 # ---- Stage 2: run it with only the JRE (same as the core's image) ----

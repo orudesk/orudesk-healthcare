@@ -1,6 +1,6 @@
 // Applied only by the runnable app.
 plugins {
-    id 'orudesk-hms.java-conventions'
+    id 'orudesk-healthcare.java-conventions'
     id 'org.springframework.boot'
 }
 
