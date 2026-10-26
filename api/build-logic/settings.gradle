@@ -1,0 +1,7 @@
+rootProject.name = 'hms-build-logic'
+
+dependencyResolutionManagement {
+    repositories {
+        gradlePluginPortal()
+    }
+}
