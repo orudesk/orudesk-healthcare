@@ -1,0 +1,11 @@
+// Patients: who the hospital treats, each with a medical record number (MRN). Owns the hc_ tables.
+plugins {
+    id 'orudesk-healthcare.java-conventions'
+}
+
+dependencies {
+    implementation 'com.orudesk:orudesk-platform-core'   // ModuleMigrations, tenancy, security
+    implementation 'com.orudesk:orudesk-identity'        // RoleDefinition, OrgUnitAccess, CurrentOrgUnit
+    implementation 'com.orudesk:orudesk-party'           // every patient is a person in the registry
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+}
