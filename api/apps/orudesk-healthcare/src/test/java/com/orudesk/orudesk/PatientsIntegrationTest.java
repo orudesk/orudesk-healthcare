@@ -120,6 +120,18 @@ class PatientsIntegrationTest {
     }
 
     @Test
+    void aRegistrationIsInTheAuditLogWithWhoDidIt() throws Exception {
+        String id = JsonPath.read(register(receptionist, hospital, "Asha")
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString(), "$.id");
+
+        mockMvc.perform(get("/api/v1/audit-entries").param("subjectId", id).header("Authorization", "Bearer " + admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].action").value("patients.patient.registered"))
+                .andExpect(jsonPath("$.items[0].summary").value("Registered patient MR0000001, Asha Test-Kumar"))
+                .andExpect(jsonPath("$.items[0].actorEmail").value("test-user-desk@orudesk.org"));
+    }
+
+    @Test
     void aRefusedRegistrationUsesNoNumber() throws Exception {
         register(receptionist, hospital, "Asha");
         register(receptionist, hospital, "Asha-again", "{\"firstName\": \"X\", \"lastName\": \"Test-Kumar\","

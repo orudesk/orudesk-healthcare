@@ -5,7 +5,20 @@ Every release of Orudesk Healthcare, newest first ([Keep a Changelog](https://ke
 
 ## [Unreleased]
 
+### Added
+
+- `web/`: the healthcare edition's web app, the core's screens plus Patients: find a patient by MRN, register
+  one at the current hospital or clinic (the new MRN shown to write on the card), and a patient's page.
+  Receptionists given the role at one unit see it.
+- Patient registrations are recorded in the core's audit log; the app includes the core's `orudesk-audit`
+  module.
+- The edition's OpenAPI contract, saved by `OpenApiContractTest` to `build/openapi/orudesk-healthcare.json`;
+  CI checks the web app's copy is up to date.
+
 ### Changed
+
+- The contract says 201 Created for `POST /api/v1/patients`, and is sorted and indented.
+- The database pool waits at most 5 s for a connection (fail fast with a 503 when the database is down).
 
 - The edition is called Orudesk Healthcare: repository `orudesk/orudesk-healthcare`, Gradle group
   `com.orudesk.healthcare`, modules `orudesk-healthcare` and `orudesk-healthcare-patients`, image
