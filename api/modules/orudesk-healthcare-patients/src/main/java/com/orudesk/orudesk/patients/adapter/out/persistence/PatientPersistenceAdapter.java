@@ -7,6 +7,7 @@ import com.orudesk.orudesk.patients.domain.EmergencyContact;
 import com.orudesk.orudesk.patients.domain.Mrn;
 import com.orudesk.orudesk.patients.domain.Patient;
 import com.orudesk.orudesk.patients.domain.PatientId;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
@@ -30,6 +31,20 @@ class PatientPersistenceAdapter implements SavePatientPort, LoadPatientPort {
     }
 
     @Override
+    public long update(Patient patient) {
+        PatientJpaEntity row = patients.findById(patient.id().value())
+                .orElseThrow(() -> new IllegalStateException("updating a patient that isn't there: " + patient.id().value()));
+        if (row.getVersion() != patient.version()) {
+            throw new ObjectOptimisticLockingFailureException(PatientJpaEntity.class, patient.id().value());
+        }
+        EmergencyContact contact = patient.emergencyContact();
+        row.changeDetails(patient.bloodGroup() == null ? null : patient.bloodGroup().label(),
+                contact == null ? null : contact.name(), contact == null ? null : contact.phone());
+        patients.flush();   // the UPDATE ... WHERE version = ? runs now, so a lost race throws here
+        return row.getVersion();
+    }
+
+    @Override
     public Optional<Patient> findById(PatientId id) {
         return patients.findById(id.value()).map(PatientPersistenceAdapter::toDomain);
     }
@@ -45,6 +60,6 @@ class PatientPersistenceAdapter implements SavePatientPort, LoadPatientPort {
                 row.getBloodGroup() == null ? null : BloodGroup.fromLabel(row.getBloodGroup()),
                 row.getEmergencyContactName() == null ? null
                         : new EmergencyContact(row.getEmergencyContactName(), row.getEmergencyContactPhone()),
-                row.getRegisteredOn());
+                row.getRegisteredOn(), row.getVersion());
     }
 }

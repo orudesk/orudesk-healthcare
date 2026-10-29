@@ -168,7 +168,11 @@ export interface paths {
     };
     /** One patient */
     get: operations['getPatient'];
-    put?: never;
+    /**
+     * Change a patient's details
+     * @description Send both versions you read. 409 if the patient or the person was changed since: reload and edit again.
+     */
+    put: operations['editPatient'];
     post?: never;
     delete?: never;
     options?: never;
@@ -203,7 +207,11 @@ export interface paths {
     };
     /** One person */
     get: operations['getPerson'];
-    put?: never;
+    /**
+     * Change a person's details
+     * @description Send the version you read. 409 if the person was changed since: reload and edit again.
+     */
+    put: operations['editPerson'];
     post?: never;
     delete?: never;
     options?: never;
@@ -262,6 +270,40 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/users/{userId}/disable': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Stop a user from logging in, and end their sessions */
+    post: operations['disableUser'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/users/{userId}/enable': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Let a disabled user log in again */
+    post: operations['enableUser'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/users/{userId}/roles': {
     parameters: {
       query?: never;
@@ -310,6 +352,7 @@ export interface components {
       actorEmail?: string | null;
       /** Format: uuid */
       actorId?: string | null;
+      changes: components['schemas']['FieldChange'][];
       /** Format: uuid */
       id: string;
       /** Format: date-time */
@@ -335,6 +378,39 @@ export interface components {
       /** Format: uuid */
       id: string;
     };
+    EditPatientRequest: {
+      bloodGroup?: string | null;
+      /** Format: date */
+      dateOfBirth?: string | null;
+      /** Format: email */
+      email?: string | null;
+      emergencyContactName?: string | null;
+      emergencyContactPhone?: string | null;
+      firstName: string;
+      lastName: string;
+      /** Format: int64 */
+      personVersion: number;
+      phone?: string | null;
+      /** Format: int64 */
+      version: number;
+    };
+    EditPersonRequest: {
+      /** Format: date */
+      dateOfBirth?: string | null;
+      /** Format: email */
+      email?: string | null;
+      firstName: string;
+      lastName: string;
+      phone?: string | null;
+      /** Format: int64 */
+      version: number;
+    };
+    FieldChange: {
+      after?: string | null;
+      before?: string | null;
+      field: string;
+      valuesHidden: boolean;
+    };
     Grant: {
       /** Format: uuid */
       orgUnitId?: string | null;
@@ -357,6 +433,7 @@ export interface components {
       bloodGroup?: string | null;
       /** Format: date */
       dateOfBirth?: string | null;
+      email?: string | null;
       emergencyContactName?: string | null;
       emergencyContactPhone?: string | null;
       firstName: string;
@@ -366,11 +443,15 @@ export interface components {
       mrn: string;
       /** Format: uuid */
       personId: string;
+      /** Format: int64 */
+      personVersion: number;
       phone?: string | null;
       /** Format: uuid */
       registeredAtUnitId: string;
       /** Format: date */
       registeredOn: string;
+      /** Format: int64 */
+      version: number;
     };
     PatientRegistered: {
       /** Format: uuid */
@@ -386,6 +467,8 @@ export interface components {
       id: string;
       lastName: string;
       phone?: string | null;
+      /** Format: int64 */
+      version: number;
     };
     PersonPage: {
       items: components['schemas']['PersonDetails'][];
@@ -765,6 +848,32 @@ export interface operations {
       };
     };
   };
+  editPatient: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        patientId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['EditPatientRequest'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PatientDetails'];
+        };
+      };
+    };
+  };
   searchPeople: {
     parameters: {
       query?: {
@@ -823,6 +932,32 @@ export interface operations {
       cookie?: never;
     };
     requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PersonDetails'];
+        };
+      };
+    };
+  };
+  editPerson: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        personId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['EditPersonRequest'];
+      };
+    };
     responses: {
       /** @description OK */
       200: {
@@ -896,6 +1031,46 @@ export interface operations {
         content: {
           'application/json': components['schemas']['UserProfile'];
         };
+      };
+    };
+  };
+  disableUser: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        userId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  enableUser: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        userId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };

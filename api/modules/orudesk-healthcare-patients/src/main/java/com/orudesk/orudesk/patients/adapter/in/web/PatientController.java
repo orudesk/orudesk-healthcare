@@ -1,6 +1,8 @@
 package com.orudesk.orudesk.patients.adapter.in.web;
 
 import com.orudesk.orudesk.identity.CurrentOrgUnit;
+import com.orudesk.orudesk.patients.application.port.in.EditPatientCommand;
+import com.orudesk.orudesk.patients.application.port.in.EditPatientUseCase;
 import com.orudesk.orudesk.patients.application.port.in.GetPatientQuery;
 import com.orudesk.orudesk.patients.application.port.in.PatientDetails;
 import com.orudesk.orudesk.patients.application.port.in.PatientRegistered;
@@ -17,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -32,11 +35,14 @@ import java.util.UUID;
 class PatientController {
 
     private final RegisterPatientUseCase registerPatient;
+    private final EditPatientUseCase editPatient;
     private final GetPatientQuery getPatient;
     private final CurrentOrgUnit currentOrgUnit;
 
-    PatientController(RegisterPatientUseCase registerPatient, GetPatientQuery getPatient, CurrentOrgUnit currentOrgUnit) {
+    PatientController(RegisterPatientUseCase registerPatient, EditPatientUseCase editPatient, GetPatientQuery getPatient,
+                      CurrentOrgUnit currentOrgUnit) {
         this.registerPatient = registerPatient;
+        this.editPatient = editPatient;
         this.getPatient = getPatient;
         this.currentOrgUnit = currentOrgUnit;
     }
@@ -64,5 +70,15 @@ class PatientController {
     @Operation(operationId = "getPatient", summary = "One patient")
     PatientDetails get(@PathVariable UUID patientId) {
         return getPatient.getPatient(patientId);
+    }
+
+    /** Anyone who may look patients up may correct their details: the front desk at any of the group's units. */
+    @PutMapping("/{patientId}")
+    @Operation(operationId = "editPatient", summary = "Change a patient's details",
+            description = "Send both versions you read. 409 if the patient or the person was changed since: reload and edit again.")
+    PatientDetails edit(@PathVariable UUID patientId, @Valid @RequestBody EditPatientRequest request) {
+        return editPatient.edit(new EditPatientCommand(patientId, request.version(), request.personVersion(),
+                request.firstName(), request.lastName(), request.dateOfBirth(), request.phone(), request.email(),
+                request.bloodGroup(), request.emergencyContactName(), request.emergencyContactPhone()));
     }
 }

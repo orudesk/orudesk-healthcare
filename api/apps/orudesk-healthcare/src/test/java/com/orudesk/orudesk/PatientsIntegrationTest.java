@@ -22,6 +22,7 @@ import java.util.concurrent.Future;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -173,6 +174,58 @@ class PatientsIntegrationTest {
     }
 
     @Test
+    void theFrontDeskCorrectsAPatientAndEachModuleAuditsWhatItOwns() throws Exception {
+        String id = JsonPath.read(register(receptionist, hospital, "Asha")
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString(), "$.id");
+
+        edit(receptionist, id, 0, 0, "+91 99887 12345", "B+")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.phone").value("+91 99887 12345"))
+                .andExpect(jsonPath("$.bloodGroup").value("B+"))
+                .andExpect(jsonPath("$.version").value(1))
+                .andExpect(jsonPath("$.personVersion").value(1));
+
+        String personId = JsonPath.read(mockMvc.perform(get("/api/v1/patients/{id}", id)
+                .header("Authorization", "Bearer " + receptionist)).andReturn().getResponse().getContentAsString(), "$.personId");
+        mockMvc.perform(get("/api/v1/audit-entries").param("subjectId", id).header("Authorization", "Bearer " + admin))
+                .andExpect(jsonPath("$.items[0].summary").value("Changed bloodGroup of patient MR0000001"))
+                .andExpect(jsonPath("$.items[0].changes[0].before").value("O+"))
+                .andExpect(jsonPath("$.items[0].changes[0].after").value("B+"));
+        mockMvc.perform(get("/api/v1/audit-entries").param("subjectId", personId).header("Authorization", "Bearer " + admin))
+                .andExpect(jsonPath("$.items[0].summary").value("Changed phone of Asha Test-Kumar"));
+    }
+
+    @Test
+    void anEditOnAStaleVersionChangesNeitherRecord() throws Exception {
+        String id = JsonPath.read(register(receptionist, hospital, "Asha")
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString(), "$.id");
+        edit(receptionist, id, 0, 0, "+91 99887 12345", "O+").andExpect(status().isOk());   // the person moves to 1
+
+        // Still at person version 0: the blood group would change, but the person refuses, and both roll back
+        edit(receptionist, id, 0, 0, "+91 99887 99999", "AB-")
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.currentVersion").value(1));
+
+        mockMvc.perform(get("/api/v1/patients/{id}", id).header("Authorization", "Bearer " + receptionist))
+                .andExpect(jsonPath("$.bloodGroup").value("O+"))
+                .andExpect(jsonPath("$.phone").value("+91 99887 12345"));
+    }
+
+    @Test
+    void someoneWithoutAPatientsRoleCannotEdit() throws Exception {
+        String id = JsonPath.read(register(receptionist, hospital, "Asha")
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString(), "$.id");
+        mockMvc.perform(post("/api/v1/auth/register").contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"email": "test-user-plain@orudesk.org", "password": "user-password"}
+                                """))
+                .andExpect(status().isCreated());
+
+        edit(login("test-user-plain@orudesk.org", "user-password"), id, 0, 0, "+91 00000 00000", "O+")
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     void anUnknownBloodGroupIsRefused() throws Exception {
         register(receptionist, hospital, "Asha", """
                 {"firstName": "Asha", "lastName": "Test-Kumar", "bloodGroup": "C+"}
@@ -192,6 +245,17 @@ class PatientsIntegrationTest {
                 .header("X-Org-Unit", unit)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body));
+    }
+
+    private ResultActions edit(String token, String id, int version, int personVersion, String phone, String bloodGroup)
+            throws Exception {
+        return mockMvc.perform(put("/api/v1/patients/{id}", id).header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {"version": %d, "personVersion": %d, "firstName": "Asha", "lastName": "Test-Kumar",
+                         "dateOfBirth": "1985-03-14", "phone": "%s", "bloodGroup": "%s",
+                         "emergencyContactName": "Ravi Test-Kumar", "emergencyContactPhone": "+91 99887 00000"}
+                        """.formatted(version, personVersion, phone, bloodGroup)));
     }
 
     private static String mrnOf(ResultActions result) throws Exception {

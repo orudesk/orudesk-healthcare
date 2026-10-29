@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import org.hibernate.annotations.TenantId;
 
 import java.time.LocalDate;
@@ -42,6 +43,9 @@ class PatientJpaEntity {
     @Column(name = "registered_on", nullable = false)
     private LocalDate registeredOn;
 
+    @Version   // optimistic locking, as in the core's PersonJpaEntity (Day 46); null until first saved
+    private Long version;
+
     protected PatientJpaEntity() {
         // JPA needs a no-argument constructor
     }
@@ -58,6 +62,12 @@ class PatientJpaEntity {
         this.registeredOn = registeredOn;
     }
 
+    void changeDetails(String bloodGroup, String emergencyContactName, String emergencyContactPhone) {
+        this.bloodGroup = bloodGroup;
+        this.emergencyContactName = emergencyContactName;
+        this.emergencyContactPhone = emergencyContactPhone;
+    }
+
     UUID getId() { return id; }
     UUID getPersonId() { return personId; }
     String getMrn() { return mrn; }
@@ -66,4 +76,5 @@ class PatientJpaEntity {
     String getEmergencyContactName() { return emergencyContactName; }
     String getEmergencyContactPhone() { return emergencyContactPhone; }
     LocalDate getRegisteredOn() { return registeredOn; }
+    Long getVersion() { return version; }
 }
