@@ -1,14 +1,14 @@
 import { Alert, Button, Group, Loader, Select, Stack, Text, TextInput, Title } from '@mantine/core';
-import { useCurrentUnit, useCurrentUnitAccess, usePageTitle } from '@orudesk/web-core';
+import {
+  useCurrentUnit,
+  useCurrentUnitAccess,
+  usePageTitle,
+  ValidationError,
+} from '@orudesk/web-core';
 import type { FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router';
 import type { HealthcareSchemas } from '../api';
-import {
-  BLOOD_GROUPS,
-  PATIENT_UNIT_TYPES,
-  PatientValidationError,
-  useRegisterPatient,
-} from '../patients';
+import { BLOOD_GROUPS, PATIENT_UNIT_TYPES, useRegisterPatient } from '../patients';
 
 /** Register a patient at the hospital or clinic picked in the switcher, as admissions do at a school. */
 export function RegisterPatientPage() {
@@ -41,7 +41,7 @@ export function RegisterPatientPage() {
 function PatientForm({ unitId, unitName }: { unitId: string; unitName: string }) {
   const register = useRegisterPatient(unitId);
   const navigate = useNavigate();
-  const errors = register.error instanceof PatientValidationError ? register.error.fields : {};
+  const errors = register.error instanceof ValidationError ? register.error.fields : {};
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();

@@ -56,6 +56,9 @@ export function PatientPage() {
             </SimpleGrid>
           </Card>
           <Group gap="lg">
+            <Anchor component={Link} to={`/patients/${patient.data.id}/edit`} size="sm">
+              Edit details
+            </Anchor>
             <Anchor component={Link} to={`/people/${patient.data.personId}`} size="sm">
               Their entry in the People registry
             </Anchor>

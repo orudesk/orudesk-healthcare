@@ -19,6 +19,10 @@ export const healthcareModule: OrudeskModule = {
       }),
     },
     {
+      path: '/patients/:patientId/edit',
+      lazy: async () => ({ Component: (await import('./pages/EditPatientPage')).EditPatientPage }),
+    },
+    {
       path: '/patients/:patientId',
       lazy: async () => ({ Component: (await import('./pages/PatientPage')).PatientPage }),
     },

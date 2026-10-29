@@ -34,6 +34,9 @@ const asha = {
   emergencyContactPhone: '+91 99887 00000',
   registeredAtUnitId: 'city',
   registeredOn: '2026-10-26',
+  email: null,
+  version: 2,
+  personVersion: 5,
 };
 
 function openAt(path: string, handlers: Parameters<typeof fakeApi>[0]) {
@@ -137,5 +140,46 @@ describe('the healthcare edition', () => {
     expect(await screen.findByRole('status')).toHaveTextContent(
       'Patients are registered at a hospital or clinic.',
     );
+  });
+
+  it('corrects a patient, sending both versions, and shows the saved details', async () => {
+    const api = openAt('/patients/pt1/edit', {
+      'GET /api/v1/patients/pt1': () => json(asha),
+      'PUT /api/v1/patients/pt1': () =>
+        json({ ...asha, phone: '+91 90000 22222', version: 2, personVersion: 6 }),
+    });
+
+    const phone = (await screen.findAllByLabelText('Phone'))[0]!;
+    await userEvent.clear(phone);
+    await userEvent.type(phone, '+91 90000 22222');
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(await screen.findByText('+91 90000 22222')).toBeInTheDocument();
+    expect(window.location.pathname).toBe('/patients/pt1');
+    const sent = api.requests.find((r) => r.method === 'PUT')!;
+    expect(await sent.json()).toEqual({
+      version: 2,
+      personVersion: 5,
+      firstName: 'Asha',
+      lastName: 'Kumar',
+      dateOfBirth: '1985-03-14',
+      phone: '+91 90000 22222',
+      email: null,
+      bloodGroup: 'O+',
+      emergencyContactName: 'Ravi Kumar',
+      emergencyContactPhone: '+91 99887 00000',
+    });
+  });
+
+  it('offers a reload when someone else saved the patient first', async () => {
+    openAt('/patients/pt1/edit', {
+      'GET /api/v1/patients/pt1': () => json(asha),
+      'PUT /api/v1/patients/pt1': () =>
+        json({ title: 'Edit conflict', detail: 'patient pt1 was changed', currentVersion: 3 }, 409),
+    });
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Save' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Changed by someone else');
   });
 });

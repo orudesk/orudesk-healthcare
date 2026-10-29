@@ -1,4 +1,4 @@
-import { problemMessage } from '@orudesk/web-core';
+import { saveError } from '@orudesk/web-core';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useHealthcareApi, type HealthcareSchemas } from './api';
 
@@ -42,16 +42,6 @@ export function usePatient(patientId: string) {
   });
 }
 
-/** The API refused the form: a message per field, as in the core's forms (Day 35). */
-export class PatientValidationError extends Error {
-  constructor(
-    message: string,
-    readonly fields: Record<string, string>,
-  ) {
-    super(message);
-  }
-}
-
 /** Register at `unitId`, sent explicitly as X-Org-Unit: the unit the form showed (see the school's Day 44). */
 export function useRegisterPatient(unitId: string) {
   const api = useHealthcareApi();
@@ -63,16 +53,39 @@ export function useRegisterPatient(unitId: string) {
         body: patient,
       });
       if (data) return data;
-      if (response.status === 400) {
-        const fields = (error as { errors?: Record<string, string> } | undefined)?.errors ?? {};
-        throw new PatientValidationError(problemMessage(error, 'Some fields are invalid.'), fields);
-      }
-      throw new Error(problemMessage(error, 'The patient was not registered.'));
+      throw saveError(response, error, 'The patient was not registered.');
     },
     onSuccess: () =>
       Promise.all([
         queryClient.invalidateQueries({ queryKey: ['patients'] }),
         queryClient.invalidateQueries({ queryKey: ['people'] }),
       ]),
+  });
+}
+
+/**
+ * Saves the front desk's corrections (PUT, Day 49) with both versions read: the patient's and the person's.
+ * The core's EditConflictError if either was saved in between, ValidationError for refused fields.
+ */
+export function useEditPatient(patientId: string) {
+  const api = useHealthcareApi();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (patient: HealthcareSchemas['EditPatientRequest']) => {
+      const { data, error, response } = await api.PUT('/api/v1/patients/{patientId}', {
+        params: { path: { patientId } },
+        body: patient,
+      });
+      if (data) return data;
+      throw saveError(response, error, 'The changes were not saved.');
+    },
+    onSuccess: (patient) => {
+      queryClient.setQueryData(['patients', 'one', patientId], patient);
+      return Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['patients', 'mrn'] }),
+        queryClient.invalidateQueries({ queryKey: ['people'] }),
+        queryClient.invalidateQueries({ queryKey: ['audit'] }),
+      ]);
+    },
   });
 }
