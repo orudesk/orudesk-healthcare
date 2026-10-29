@@ -7,6 +7,9 @@ Every release of Orudesk Healthcare, newest first ([Keep a Changelog](https://ke
 
 ### Added
 
+- Opening a patient's record (by id or by MRN) is recorded in the audit log as `patients.patient.viewed`, with
+  who opened it, so an admin can answer "who looked at this patient?" from `/api/v1/audit-entries?subjectId=`.
+  If the entry can't be written, the record isn't shown.
 - `web/`: the healthcare edition's web app, the core's screens plus Patients: find a patient by MRN, register
   one at the current hospital or clinic (the new MRN shown to write on the card), and a patient's page.
   Receptionists given the role at one unit see it.

@@ -132,6 +132,25 @@ class PatientsIntegrationTest {
                 .andExpect(jsonPath("$.items[0].actorEmail").value("test-user-desk@orudesk.org"));
     }
 
+    /** Day 69: every look at a record is in the log, by id or by MRN, so "who looked at this patient?" has an answer. */
+    @Test
+    void openingARecordIsInTheAuditLogToo() throws Exception {
+        String id = JsonPath.read(register(admin, clinic, "Asha")
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString(), "$.id");
+
+        mockMvc.perform(get("/api/v1/patients/{id}", id).header("Authorization", "Bearer " + receptionist))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/patients").param("mrn", "MR0000001").header("Authorization", "Bearer " + receptionist))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/audit-entries").param("subjectId", id).header("Authorization", "Bearer " + admin))
+                .andExpect(jsonPath("$.items[0].action").value("patients.patient.viewed"))
+                .andExpect(jsonPath("$.items[0].summary").value("Opened patient MR0000001"))
+                .andExpect(jsonPath("$.items[0].actorEmail").value("test-user-desk@orudesk.org"))
+                .andExpect(jsonPath("$.items[1].action").value("patients.patient.viewed"))
+                .andExpect(jsonPath("$.items[2].action").value("patients.patient.registered"));
+    }
+
     @Test
     void aRefusedRegistrationUsesNoNumber() throws Exception {
         register(receptionist, hospital, "Asha");
@@ -178,15 +197,15 @@ class PatientsIntegrationTest {
         String id = JsonPath.read(register(receptionist, hospital, "Asha")
                 .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString(), "$.id");
 
-        edit(receptionist, id, 0, 0, "+91 99887 12345", "B+")
+        String edited = edit(receptionist, id, 0, 0, "+91 99887 12345", "B+")
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.phone").value("+91 99887 12345"))
                 .andExpect(jsonPath("$.bloodGroup").value("B+"))
                 .andExpect(jsonPath("$.version").value(1))
-                .andExpect(jsonPath("$.personVersion").value(1));
+                .andExpect(jsonPath("$.personVersion").value(1))
+                .andReturn().getResponse().getContentAsString();
 
-        String personId = JsonPath.read(mockMvc.perform(get("/api/v1/patients/{id}", id)
-                .header("Authorization", "Bearer " + receptionist)).andReturn().getResponse().getContentAsString(), "$.personId");
+        String personId = JsonPath.read(edited, "$.personId");
         mockMvc.perform(get("/api/v1/audit-entries").param("subjectId", id).header("Authorization", "Bearer " + admin))
                 .andExpect(jsonPath("$.items[0].summary").value("Changed bloodGroup of patient MR0000001"))
                 .andExpect(jsonPath("$.items[0].changes[0].before").value("O+"))

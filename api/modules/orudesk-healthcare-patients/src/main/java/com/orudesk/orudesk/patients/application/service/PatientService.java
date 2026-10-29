@@ -13,6 +13,7 @@ import com.orudesk.orudesk.patients.application.port.in.PatientDetails;
 import com.orudesk.orudesk.patients.application.port.in.PatientEdited;
 import com.orudesk.orudesk.patients.application.port.in.NewPatientRegistered;
 import com.orudesk.orudesk.patients.application.port.in.PatientRegistered;
+import com.orudesk.orudesk.patients.application.port.in.PatientViewed;
 import com.orudesk.orudesk.patients.application.port.in.RegisterPatientCommand;
 import com.orudesk.orudesk.patients.application.port.in.RegisterPatientUseCase;
 import com.orudesk.orudesk.patients.application.port.out.LoadPatientPort;
@@ -138,18 +139,27 @@ class PatientService implements RegisterPatientUseCase, EditPatientUseCase, GetP
         return patient.emergencyContact() == null ? null : patient.emergencyContact().phone();
     }
 
+    /**
+     * Not read-only, although it only reads patients: each look is written to the audit log, in this transaction.
+     * If the entry can't be written the record isn't shown (no read without a trace).
+     */
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public PatientDetails getPatient(UUID patientId) {
         PatientId id = new PatientId(patientId);
-        return details(lookUp(loadPatientPort.findById(id), "id " + patientId));
+        return viewed(lookUp(loadPatientPort.findById(id), "id " + patientId));
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public PatientDetails findByMrn(String mrn) {
         Mrn wanted = new Mrn(mrn);
-        return details(lookUp(loadPatientPort.findByMrn(wanted), "MRN " + wanted.value()));
+        return viewed(lookUp(loadPatientPort.findByMrn(wanted), "MRN " + wanted.value()));
+    }
+
+    private PatientDetails viewed(Patient patient) {
+        events.publishEvent(new PatientViewed(patient.id().value(), patient.mrn().value()));
+        return details(patient);
     }
 
     /** Someone without a patients role anywhere gets "not found", as if the patient didn't exist. */
